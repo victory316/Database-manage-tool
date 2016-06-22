@@ -1,0 +1,32 @@
+TestFOM2DBMap
+FOMsimple.xml
+UDT
+2
+BaseEntity BaseEntity
+5
+AccelerationVector HLAASCIIstring AccelerationVector varchar(8), 
+DeadReckoningAlgorithm HLAASCIIstring DeadReckoningAlgorithm varchar(8), 
+Orientation HLAASCIIstring Orientation varchar(8), 
+WorldLocation HLAASCIIstring WorldLocation varchar(8), 
+VelocityVector HLAASCIIstring VelocityVector varchar(8), 
+
+Dummy1Compatibility13 Dummy1Compatibility13
+0
+
+1
+WeaponFire WeaponFire
+13
+EventIdentifier HLAASCIIstring EventIdentifier varchar(8), 
+FireControlSolutionRange HLAASCIIstring FireControlSolutionRange varchar(8), 
+FireMissionIndex HLAASCIIstring FireMissionIndex varchar(8), 
+FiringLocation HLAASCIIstring FiringLocation varchar(8), 
+FiringObjectIdentifier HLAASCIIstring FiringObjectIdentifier varchar(8), 
+FuseType HLAASCIIstring FuseType varchar(8), 
+InitialVelocityVector HLAASCIIstring InitialVelocityVector varchar(8), 
+MunitionObjectIdentifier HLAASCIIstring MunitionObjectIdentifier varchar(8), 
+MunitionType HLAASCIIstring MunitionType varchar(8), 
+QuantityFired HLAASCIIstring QuantityFired varchar(8), 
+RateOfFire HLAASCIIstring RateOfFire varchar(8), 
+TargetObjectIdentifier HLAASCIIstring TargetObjectIdentifier varchar(8), 
+WarheadType HLAASCIIstring WarheadType varchar(8), 
+

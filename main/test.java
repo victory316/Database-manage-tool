@@ -1,381 +1,331 @@
 package ui.main;
+import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.Graphics;
+import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.border.LineBorder;
 
+import testDB.XmlToDBSchema;
+import ui.menu.DbQuery;
 import testXMLPar.ParsingXML;
 import ui.api.ButtonEditor;
 import ui.api.ButtonRenderer;
-import ui.api.CsCreateButtonActionListener;
-import ui.dbmsSetting.DBConnetionStructClass;
-import ui.dbmsSetting.DBMSSetting;
-import ui.fileMneu.AddFederate;
-import ui.fileMneu.FederationSetting;
-import ui.fileMneu.FomSelect;
-import ui.fileMneu.FomVersionSelect;
-import ui.fileMneu.UserDefined;
-import ui.fileMneu.UserDefinedTypeList;
-import ui.fileMneu.federateSetting;
+import util.DBManager;
 import Data.DataType;
-import Transformation.ReplicationDirectoryInfo;
-import Transformation.CreateUserDefinedType;
+
+
+
+
+// ë¸Œë¼ìš°ì§• íŠ¸ë¦¬ì— í•„ìš”í•œ íŒŒì¼ë“¤
+import java.awt.BorderLayout;
+
+import javax.swing.DefaultCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellEditor;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeCellEditor;
+import javax.swing.tree.TreePath;
+import javax.swing.*;
+import javax.swing.tree.TreeNode;
+
+import java.awt.*;
+import java.util.Enumeration;
 
 public class test extends JFrame{
 	private static final long serialVersionUID = 1L;
-	private JFrame federationSetting = new FederationSetting();//Æä´õ·¹ÀÌÆ®¼ÂÆÃ
-	private JFrame fomSetting = new FomVersionSelect();//Æû¼ÂÆÃ
-	private JFrame fomSelect = new FomSelect("");//Æû ¼±ÅÃ
-	private JFrame uesrDefineType = new UserDefinedTypeList("");//À¯ÀúµğÆÄÀÎµåÅ¸ÀÔ ¸®½ºÆ® º¸±â
-	private JFrame userDefined = new UserDefined();//À¯ÀúµğÆÄÀÎµåÅ¸ÀÔ ÀÚ¼¼È÷ º¸±â
-	private JFrame DBMSSettingFrame = new DBMSSetting();//db¼±ÅÃ ÇÏ´Â Ã¢
-	private ParsingXML txml = new ParsingXML();//±âÁ¸ ¼Ò½º
-	private DataType dataTypeSelect = new DataType();//±âÁ¸¼Ò½º¿¡ ÀÖ´Â µ¥ÀÌÅÍ Å¸ÀÔ °¡Á®¿À´Â Å¬·¹½º
-	private federateSetting federateSetting = new federateSetting();//Æä´õ·¹Æ®¼¼ÆÃÃ¢
-	private AddFederate addFederate = null;//Æä´õ·¹ÀÌÆ® Ãß°¡
-	private DBConnetionStructClass dbConnetionStructClass = new DBConnetionStructClass();//¿¬µ¿ ¸ğµå ¼³Á¤
-	private ArrayList<String> fixedData;
-	/**
-	 * 
+	private String filePaths;
+	private JTextField filePath;
+	private JTextField queryField;
+	private static DefaultTableModel model;
+	private static JScrollPane jsp;
+	private DBManager dbManager = new DBManager();
+	private JFrame dbQuery = new DbQuery();
+	private Font f1, f2;
+	private JOptionPane messagebox = new JOptionPane();
+	
+	/*      
+	 *  			160803 ìˆ˜ì •ì‚¬í•­ : ìŠ¤í‚¤ë§ˆ ìƒì„±ì‹œ ë°ì´í„°ë² ì´ìŠ¤ì— ì´ë¯¸ ìŠ¤í‚¤ë§ˆê°€ ì¡´ì¬í•˜ë©´ ìŠ¤í‚¤ë§ˆë¥¼ ìƒì„±í•˜ì§€ ì•ŠìŒ.
+	 *  			160804 ìˆ˜ì •ì‚¬í•­ : ë°ì´í„° ì§ˆì˜ë©”ë‰´ ì¶”ê°€ ë° ë©”ë‰´ì°½ êµ¬í˜„
+	 *  			160821 ìˆ˜ì •ì‚¬í•­ : ë©”ë‰´ êµ¬ì„± ë³€ê²½, í°íŠ¸ ë³€ê²½
 	 */
 	public test() {
-		//default frame »ı¼º
+		
+		//default frame ìƒì„±
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
-		setTitle("FOM2DB");
+		setSize(900,530);
+		setTitle("ë¶„ì‚° ì‹œë®¬ë ˆì´ì…˜ DB ê´€ë¦¬ë„êµ¬");
 		Dimension frameSize = this.getSize();
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(((screenSize.width - frameSize.width)/2), ((screenSize.height - frameSize.height)/2));
+		
+		
+		// ------------------------------------ ê¸°ë³¸ íŒ¨ë„ì •ì˜ ----------------------------------
+		
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		
+		// -------------------------------  íŠ¸ë¦¬ í…Œì´ë¸” ë° ì„ íƒí•œ íŠ¸ë¦¬ì˜ í…Œì´ë¸” ì´ë¦„ í† í°í™” ë° í…Œì´ë¸” ìƒˆë¡œê³ ì¹¨ -------------------------------
+	
+		DefaultMutableTreeNode root = new DefaultMutableTreeNode("DB");
+		
+		JTree tree = new JTree(root);
+		
+		// íŠ¸ë¦¬ í´ë¦­ ë¦¬ìŠ¤ë„ˆ
+		tree.addMouseListener(new MouseAdapter() {
+		      public void mouseClicked(MouseEvent me) {
+		        doMouseClicked(me);
+		      }
 
-		final ImageIcon image = new ImageIcon("E:\\wargame.jpg");
-		JPanel panel = new JPanel() {
-			public void paintComponent(Graphics g) {
-				// Approach 1: Dispaly image at at full size
-				g.drawImage(image.getImage(), 0, 0, null);
-				// Approach 2: Scale image to size of component
-				 Dimension d = getSize();
-				 g.drawImage(image.getImage(), 0, 0, d.width, d.height, null);
-//				 Approach 3: Fix the image position in the scroll pane
-				setOpaque(false);
-				super.paintComponent(g);
+			private void doMouseClicked(MouseEvent me) {
+
+				TreePath tp = tree.getPathForLocation(me.getX(), me.getY());
+				String result;
+				
+				if (tp != null){
+				
+					// componentì— ì„ íƒí•œ íŠ¸ë¦¬ ì´ë¦„ì„ ì €ì¥í•˜ê³  ìŠ¤í‚¤ë§ˆ ì´ë¦„ì¸ CSH. ë¥¼ í¬í•¨í•˜ëŠ” ë¶€ë¶„ì˜ ì¸ë±ìŠ¤ë¥¼ 1 ì¶”ê°€í•˜ì—¬ indexì— ì €ì¥
+					// substringìœ¼ë¡œ í•´ë‹¹ ì¸ë±ìŠ¤ë¶€í„°ì˜ ì´ë¦„ì„ resultì— ì €ì¥, dbmanager.createTableì— í…Œì´ë¸”ëª¨ë¸ model, í† í°í™”ëœ ì´ë¦„ result ë¥¼ ë„£ì–´ ì‹¤í–‰.  
+					
+					String component = tp.getLastPathComponent().toString();
+					if(true){
+						int index = component.indexOf(".") + 1;
+						result = component.substring(index);
+						dbManager.createTable(model, result);
+						if (!jsp.isVisible()) jsp.setVisible(true);
+					}
+				}
 			}
-		};
-		add(panel);
+		    });
+		
+		JScrollPane scrollPane = new JScrollPane(tree);
+		scrollPane.setSize(100,100);
+		panel.add(scrollPane, BorderLayout.WEST);
+		
+		
+		// ------------------------------- í…Œì´ë¸” êµ¬í˜„ -------------------------------------------
+		
+		JTable table2;
+
+		
+		String [][] data = null;
+		String title[]={"ìŠ¤í‚¤ë§ˆ","í…Œì´ë¸”","ì´ë¦„","ìœ í˜•"};
+		
+		model = new DefaultTableModel(data, title);
+		table2 = new JTable(model);
+		jsp = new JScrollPane(table2);
+		//jsp.setBounds(340, 35, 580, 450);
+		//jsp.setSize(500,450);
+		jsp.setVisible(false);
+		panel.add(jsp, BorderLayout.CENTER);
+		
+		this.add(panel);
+		this.setVisible(true);
+		
+		// ------------------------------  ë©”ë‰´ë°” ë° ë©”ë‰´ë²„íŠ¼ ì¶”ê°€ë¶€ë¶„  -------------------------------
+		 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
-		JMenu filemenu = new JMenu("ÆÄÀÏ(F)");
-		menuBar.add(filemenu);
 		
-		JMenu inputSetting = new JMenu("ÀÔ·Â ¼³Á¤(I)");
-		menuBar.add(inputSetting);
-		JMenuItem inputFederation = new JMenuItem("Æä´õ·¹ÀÌ¼Ç ¼³Á¤(F)");
-		inputFederation.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				federationSetting.setVisible(true);
-			}
-		});
-		inputSetting.add(inputFederation);
+		JMenuItem convert = new JMenuItem(" ìŠ¤í‚¤ë§ˆ ìƒì„± ");
+		JMenuItem delete = new JMenuItem(" ìŠ¤í‚¤ë§ˆ ì‚­ì œ ");
+		JMenuItem option = new JMenuItem(" BASE ëª¨ë¸ ì„¤ì • ");
+		JMenuItem search = new JMenuItem(" ë°ì´í„° ê²€ìƒ‰ ");
 		
+		JMenu tableM = new JMenu(" ìŠ¤í‚¤ë§ˆ ê´€ë¦¬ ");
+		menuBar.add(tableM);
+		tableM.add(convert);
+		tableM.add(delete);
+		tableM.add(option);
 		
-		JMenuItem FOMSettingMenu = new JMenuItem("FOM ¼³Á¤(O)");
-		FOMSettingMenu.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				fomSetting.setVisible(true);
-				((FomVersionSelect)fomSetting).getCheck().addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						fomSetting.dispose();
-						fomSelect.setVisible(true);
-					}
-				});
-			}
-		});
+		JMenu searchM = new JMenu(" ë°ì´í„° ê²€ìƒ‰ ");
+		searchM.add(search);
+		menuBar.add(searchM);
 		
-		//fomSelectÀÇ check ¹öÆ° ÃëÇÏ±â
-		JButton check = ((FomSelect)fomSelect).getCheck();
-		check.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				fomSelect.setVisible(false);
-				//
-				//À¯Àú definde °¡Á®¿À±â
-				//
-				String filepath = ((FomSelect)fomSelect).getFilePaths();
-				txml.setData(filepath);
-				fixedData = txml.getUserDefinedType();
-				final String datas[] = new String[fixedData.size()];
-				final String dataNameAndType[] = new String[fixedData.size()];
-				int i = 0;
-				for( String d : fixedData ){
-					String userdefinedName = d.split("==")[0];
-					datas[i] = userdefinedName;
-					dataNameAndType[i++] = d.split("==")[1];
-				}
-				uesrDefineType.setVisible(true);
-				
-				
-				final JList<String> list = ((UserDefinedTypeList)uesrDefineType).getDefinedData();
-				list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-				list.setModel(new AbstractListModel<String>() {
-					/**
-					 * serialVersionUID
-					 */
-					private static final long serialVersionUID = 1L;
-					String[] values = datas;
-					public int getSize() {
-						return values.length;
-					}
-					public String getElementAt(int index) {
-						return values[index];
-					}
-				});
-				
-				
-				//»ç¿ëÀÚ Á¤ÀÇÅ¸ÀÔ Å¬¸¯ ÈÄ º¸ÀÌ´Â È­¸é Ãâ·Â
-				list.addListSelectionListener(new ListSelectionListener() {
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-						JPanel definedTypeName =  new JPanel();
-						JPanel definedTypeNameCount = new JPanel();
-						
-						JScrollPane scrollPane = ((UserDefined)userDefined).getScrollPane();
-						scrollPane.setColumnHeaderView(definedTypeName);
-						scrollPane.setRowHeaderView(definedTypeNameCount);
-						
-						JLabel name = new JLabel(datas[list.getSelectedIndex()]);
-						definedTypeName.add(name);
-						
-						
-						JLabel count = new JLabel();
-						String datasType[] = dataNameAndType[list.getSelectedIndex()].split("\\\\");
-						count.setText("»ç¿ëÀÚ Á¤ÀÇ Å¸ÀÔ °´Ã¼ ¼ö : " + datasType.length );
-						definedTypeNameCount.add(count);
-						
-						//Æä³Î¿¡ ³Ö±â
-						JPanel datasPanel = ((UserDefined)userDefined).getDatasPanel();
-						datasPanel.removeAll();
-						JList<String> dataName = new JList<String>();
-						JList<String> dataType = new JList<String>();
-						JList<String> javaDataType = new JList<String>();
-						final String[] dataNames = new String[datasType.length];
-						final String[] dataTypes = new String[datasType.length];
-						final String[] javaDataTypes = new String[datasType.length];
-						int i = 0;
-						
-						for( String data : datasType ){
-							String[] datas = data.split(",");
-							dataNames[i] = datas[0];
-							dataTypes[i] = dataTypeSelect.dataTypeStructType(datas[1]);
-							javaDataTypes[i++] = dataTypeSelect.dataTypeJavaType(datas[1]);
-						}
-						dataName.setModel(new AbstractListModel<String>() {
-							private static final long serialVersionUID = 1L;
-							String[] values = dataNames;
-							public int getSize() {
-								return values.length;
-							}
-							public String getElementAt(int index) {
-								return values[index];
-							}
-						});
-						
-						javaDataType.setModel(new AbstractListModel<String>() {
-							private static final long serialVersionUID = 2L;
-							String[] values = javaDataTypes;
-							public int getSize() {
-								return values.length;
-							}
-							public String getElementAt(int index) {
-								return values[index];
-							}
-						});
-						
-						dataType.setModel(new AbstractListModel<String>() {
-							private static final long serialVersionUID = 3L;
-							String[] values = dataTypes;
-							public int getSize() {
-								return values.length;
-							}
-							public String getElementAt(int index) {
-								return values[index];
-							}
-						});
-						
-						
-						
-						datasPanel.add(dataName);
-						datasPanel.add(dataType);
-						datasPanel.add(javaDataType);
-						
-						userDefined.setVisible(true);
-					}
-				});
-				
-				
-			}
-		});
+		JMenu syncM = new JMenu(" ë™ê¸°í™” í™•ì¸ ");
+		menuBar.add(syncM);
 		
+		JMenu helpM = new JMenu(" ë„ì›€ë§ ");
+		menuBar.add(helpM);
 		
-//				UDTInfo.txt¸¸µå´Â ¹öÆ°
-		JButton testButton = ((UserDefinedTypeList)uesrDefineType).getFinish();
-		testButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				CreateUserDefinedType udttj = new CreateUserDefinedType();
-				if( fixedData != null ) udttj.transformationJavaFile(fixedData);
-				uesrDefineType.setVisible(false);
-			}
-		});		
-		
-		
-		
-		inputSetting.add(FOMSettingMenu);
-		
-		
-		
-		JMenuItem userSetting = new JMenuItem("»ç¿ëÀÚÁ¤ÀÇÅ¸ÀÔ ¼³Á¤(U)");
-		userSetting.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				uesrDefineType.setVisible(true);
-			}
-		});
-		
-		inputSetting.add(userSetting);
-		JMenuItem ferateSetting = new JMenuItem("Æä´õ·¹ÀÌÆ® ¼³Á¤(S)");
-		ferateSetting.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				federateSetting.setVisible(true);
-				JLabel federateNameData = ((federateSetting)federateSetting).getFederationName();
-				JLabel federateCountData = ((federateSetting)federateSetting).getFerateCount();
-				String data;
-				int count = federateCountData.getText().split(":")[1].replaceAll(" ", "").equals("") == true ? 0 : Integer.parseInt(federateCountData.getText().split(":")[1].replaceAll(" ", ""));
-				if( ((FederationSetting)federationSetting).getTextField().getText().equals("") ) data = "ÀÌ¸§À» ¼³Á¤ÇØ ÁÖ½Ê½Ã¿À.";
-				else data = ((FederationSetting)federationSetting).getTextField().getText();
-				federateNameData.setText("Æä´õ·¹ÀÌ¼Ç ÀÌ¸§ : " + data);
-				federateCountData.setText("Æä´õ·¹ÀÌÆ® ¼ö : " + count);
-			}
-		});
-		
-		JButton federateInsertButton = ((federateSetting)federateSetting).getInsert();//Æä´õ·¹ÀÌÆ® Ãß°¡ ¹öÆ°
-		federateInsertButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				addFederate = new AddFederate(null);
-				JButton makeButton = ((AddFederate)addFederate).getMakeButton();
-				makeButton.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						ArrayList<String> datas = ((AddFederate)addFederate).insertTable();
-						DefaultTableModel model = ((federateSetting)federateSetting).getDefaultTableModel();
-						JTable table = ((federateSetting)federateSetting).getTable();
-						Object[] data = new Object[6];
-						int i = 0;
-						data[i++] = model.getRowCount()+1;
-						
-						for( String d : datas ) data[i++] = d.replaceAll(" ", "").equals("") == true ? "¹ÌÀÔ·Â" : d;
-						
-						data[i++] = "ÆíÁı";
-						model.addRow(data);
-						
-						table.getColumn("ÆíÁı").setCellRenderer(new ButtonRenderer());
-						table.getColumn("ÆíÁı").setCellEditor(new ButtonEditor(new JCheckBox()));
-						
-						JLabel federateCountData = ((federateSetting)federateSetting).getFerateCount();
-						federateCountData.setText("Æä´õ·¹ÀÌÆ® ¼ö : " + model.getRowCount());
-					}
-				});
-				
-			}
-		});
-		
-//		lrd ¼³Á¤
-		JButton federateFinishButton = ((federateSetting)federateSetting).getSettingFinish();//Æä´õ·¹ÀÌÆ® ¿Ï·á ¹öÆ°
-		federateFinishButton.addActionListener(new ReplicationDirectoryInfo(((federateSetting)federateSetting).getTable()){});
-		
-		
-		
-		
-		
-		
-		inputSetting.add(ferateSetting);
-		JMenu outputSetting = new JMenu("Ãâ·Â ¼³Á¤(O)");
-		menuBar.add(outputSetting);
-		
-		JMenuItem DBConnection = new JMenuItem("DB¿¬µ¿±¸Á¶ ¼³Á¤(D)");
-		DBConnection.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				dbConnetionStructClass.setVisible(true);
-			}
-		});
-		outputSetting.add(DBConnection);
-		
-		JMenuItem DBMSSetting = new JMenuItem("DBMS ¼³Á¤(I)");
-		DBMSSetting.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				DBMSSettingFrame.setVisible(true);
-			}
-		});
-		outputSetting.add(DBMSSetting);
-		
-		JMenuItem outputFileSetting = new JMenuItem("Ãâ·Â ÆÄÀÏ ¼³Á¤(S)");
-		outputSetting.add(outputFileSetting);
-		
-		
-		JMenu convert = new JMenu("½ºÅ°¸¶ »ı¼º(C)");
-		
-//		GCS Create
-		JMenuItem globalDBCreate = new JMenuItem("Global DB ½ºÅ°¸¶ »ı¼º(G)");
-		globalDBCreate.addActionListener(new CsCreateButtonActionListener(federationSetting, fomSetting, fomSelect, txml));
-		menuBar.add(convert);
-		
-		convert.add(globalDBCreate);
 
-//		LCS Create
-		JMenuItem localDBCreate = new JMenuItem("Local DB ½ºÅ°¸¶ »ı¼º(L)");
-		localDBCreate.addActionListener(new CsCreateButtonActionListener(federateSetting){});		
-		convert.add(localDBCreate);
+		// -------------------------------  ë°ì´í„° ì§ˆì˜ ìœ„í•œ í…ìŠ¤íŠ¸ í•„ë“œ ì •ì˜ -----------------------------------------------------
+		
+		JPanel queryPanel = new JPanel(new BorderLayout());
+		queryField = new JTextField();
+		
+		JLabel queryLabel = new JLabel(" ë°ì´í„° ì§ˆì˜ : ");
+		
+		queryPanel.add(queryField);
+		queryPanel.add(queryLabel, BorderLayout.WEST);
+		panel.add(queryPanel, BorderLayout.NORTH);
+		
+		queryPanel.setVisible(true);
+	
+		// ------------------------ í…Œì´ë¸” ìƒì„± ë²„íŠ¼ convertì— íŒŒì¼ ì„ íƒ ë° ìŠ¤í‚¤ë§ˆ ìƒì„± ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------
+		
+
+		filePath = new JTextField();
+		filePath.setEnabled(false);
+		dbManager.createTree(root); // ìŠ¤í‚¤ë§ˆê°€ ì´ë¯¸ ìƒì„±ë˜ì—ˆì„ë•Œ í…Œì´ë¸” ì¡°íšŒë¥¼ ê°€ëŠ¥í•˜ë„ë¡ í•œë‹¤. 
 		
 		
-		JMenuItem resultPrint = new JMenuItem("º¯È¯ °á°ú º¸±â(R)");
-		convert.add(resultPrint);
-		
-		
-		JMenu search = new JMenu("FOMDBÁ¶È¸(V)");
-		menuBar.add(search);
-		JMenuItem searchTable = new JMenuItem("FOMDB Å×ÀÌºí Á¶È¸(T)");
-		search.add(searchTable);
-		JMenuItem searchQuery = new JMenuItem("FOMDB ÁúÀÇÀÔ·Â(Q)");
-		searchQuery.addActionListener(new ActionListener() {
+		convert.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println(((FederationSetting) federationSetting).getTextField().getText());//Ãâ·Â °¡´ÉÇÑ »óÅÂ
+				
+				Frame file = new Frame();
+				JFileChooser fileChooser = new JFileChooser("E:\\Dropbox\\ì¡¸ì—…í”„ë¡œì íŠ¸ì˜ íŒ€ í´ë”\\testXMLPar\\testXMLPar\\FOM");
+				setFileChooserFont(fileChooser.getComponents());
+				
+				int result = fileChooser.showOpenDialog(file);
+				if( result == JFileChooser.APPROVE_OPTION ){
+					File selectedFile = fileChooser.getSelectedFile();
+					if( selectedFile.toString().contains(".xml")) {
+						System.out.println("XML FILE SELECTED : " + selectedFile.toString());
+						filePath.setText(selectedFile.toString());
+					} else {
+						JOptionPane.showMessageDialog(file, "xmlíŒŒì¼ì„ ì„ íƒí•˜ì—¬ ì£¼ì‹­ì‹œì˜¤.");
+					}
+
+					filePaths = filePath.getText();
+					if ((filePaths.toString().contains(".xml"))) createSchema(filePaths);
+					
+					dbManager.createTree(root);   // íŠ¸ë¦¬ ìƒì„±
+					tree.repaint();
+					for (int i = 0; i < tree.getRowCount(); i++) {
+						tree.expandRow(i);
+					}
+				}
 			}
 		});
-		search.add(searchQuery);
+		  
+		
+		// ------------------------- í…Œì´ë¸” ì‚­ì œ ë²„íŠ¼ ë° ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------------
+		delete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				dbManager.deleteTree(root);
+				Frame file = new Frame();
+				tree.repaint();
+				System.out.println("\nSCHEMA DELETED");
+				JOptionPane.showMessageDialog(file, "ìŠ¤í‚¤ë§ˆê°€ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤.");
+				}
+		});
+		
+		// ------------------------ í…Œì´ë¸” ê²€ìƒ‰ ë²„íŠ¼ ë° ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------------
+		search.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				dbQuery.setVisible(true);
+			}
+		});
+		
+
+		// ------------------------------  UI ê¸€ì”¨ì²´ ì„¤ì •  ------------------------------------------------
+		
+		f1 = new Font("ë§‘ì€ ê³ ë”•", Font.PLAIN, 13);
+		f2 = new Font("ë§‘ì€ ê³ ë”•", Font.BOLD, 15);
 		
 		
-		JMenu help = new JMenu("µµ¿ò¸»(H)");
-		menuBar.add(help);
+		convert.setFont(f1);
+		delete.setFont(f1);
+		search.setFont(f1);
+		option.setFont(f1);
+		
+		tableM.setFont(f1);
+		syncM.setFont(f1);
+		searchM.setFont(f1);
+		helpM.setFont(f1);
+		table2.setFont(f1);
+		queryLabel.setFont(f1);
+	
+		UIManager.put("OptionPane.messageFont", f1);
+		UIManager.put("OptionPane.buttonFont", f1);
+		
+		dbQuery.setFont(f1);
+	}
+	
+	public void setFileChooserFont(Component[] comp)
+	  {
+	    for(int x = 0; x < comp.length; x++)
+	    {
+	      if(comp[x] instanceof Container) setFileChooserFont(((Container)comp[x]).getComponents());
+	      try{comp[x].setFont(f1);} // ê¸€ì”¨ì²´ ì„¤ì •
+	      catch(Exception e){}//do nothing
+	    }
+	  }
+	
+	
+	// -------------------------------- ìŠ¤í‚¤ë§ˆ ìƒì„± í•¨ìˆ˜ --------------------------------------
+	public void createSchema(String path) {
+		Frame file = new Frame();
+		try {
+			ParsingXML txml = new ParsingXML();
+			if (filePaths != null ) {
+				txml.setData(filePaths);
+				XmlToDBSchema xtdb = new XmlToDBSchema();
+				txml.csCreate("TestFOM2DBMap", "", "");
+				System.out.println("TXT FILE CREATED\n");
+				System.out.println("CREATING SCHEMA ..");
+				
+				if(dbManager.checkTable(model) == 0) {
+					xtdb.createDBSchma();
+					System.out.println("\nSCHEMA CREATED");
+					JOptionPane.showMessageDialog(file, "ìŠ¤í‚¤ë§ˆ ìƒì„±ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.");
+		
+				} else {
+					System.out.println("\nSCHEMA ALREADY EXIST");
+					JOptionPane.showMessageDialog(file, "ìƒì„±í•  ìŠ¤í‚¤ë§ˆê°€ DBì— ì´ë¯¸ ì¡´ì¬í•©ë‹ˆë‹¤.");
+				}
+				
+			} else {
+				System.out.println("NO FILE IN test.filePaths");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static DefaultTableModel getTable(){
+		return model;
+	}
+	
+	public static JScrollPane getJsp(){
+		return jsp;
 	}
 }

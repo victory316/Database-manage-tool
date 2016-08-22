@@ -40,71 +40,73 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.border.LineBorder;
 
 import testDB.XmlToDBSchema;
+import ui.menu.DbQuery;
 import testXMLPar.ParsingXML;
 import ui.api.ButtonEditor;
 import ui.api.ButtonRenderer;
-import ui.dbmsSetting.DBMSSetting;
 import util.DBManager;
 import Data.DataType;
-import Transformation.CreateUserDefinedType;
 
 
 
 
-
-
-
-
-
-
-
-// ºê¶ó¿ìÂ¡ Æ®¸®¿¡ ÇÊ¿äÇÑ ÆÄÀÏµé
+// ë¸Œë¼ìš°ì§• íŠ¸ë¦¬ì— í•„ìš”í•œ íŒŒì¼ë“¤
 import java.awt.BorderLayout;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellEditor;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellEditor;
 import javax.swing.tree.TreePath;
+import javax.swing.*;
+import javax.swing.tree.TreeNode;
+
+import java.awt.*;
+import java.util.Enumeration;
 
 public class test extends JFrame{
 	private static final long serialVersionUID = 1L;
 	private String filePaths;
 	private JTextField filePath;
-	private DefaultTableModel model;
-	private JScrollPane jsp;
+	private JTextField queryField;
+	private static DefaultTableModel model;
+	private static JScrollPane jsp;
 	private DBManager dbManager = new DBManager();
+	private JFrame dbQuery = new DbQuery();
+	private Font f1, f2;
+	private JOptionPane messagebox = new JOptionPane();
 	
-	/**
-	 * 
+	/*      
+	 *  			160803 ìˆ˜ì •ì‚¬í•­ : ìŠ¤í‚¤ë§ˆ ìƒì„±ì‹œ ë°ì´í„°ë² ì´ìŠ¤ì— ì´ë¯¸ ìŠ¤í‚¤ë§ˆê°€ ì¡´ì¬í•˜ë©´ ìŠ¤í‚¤ë§ˆë¥¼ ìƒì„±í•˜ì§€ ì•ŠìŒ.
+	 *  			160804 ìˆ˜ì •ì‚¬í•­ : ë°ì´í„° ì§ˆì˜ë©”ë‰´ ì¶”ê°€ ë° ë©”ë‰´ì°½ êµ¬í˜„
+	 *  			160821 ìˆ˜ì •ì‚¬í•­ : ë©”ë‰´ êµ¬ì„± ë³€ê²½, í°íŠ¸ ë³€ê²½
 	 */
 	public test() {
-		//default frame »ı¼º
+		
+		//default frame ìƒì„±
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 900, 530); // ±âº» Ã¢ Å©±â Á¶Á¤
-		setTitle("PROTOTYPE");
+		setSize(900,530);
+		setTitle("ë¶„ì‚° ì‹œë®¬ë ˆì´ì…˜ DB ê´€ë¦¬ë„êµ¬");
 		Dimension frameSize = this.getSize();
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		this.setLocation(((screenSize.width - frameSize.width)/2), ((screenSize.height - frameSize.height)/2));
 		
 		
-		// ------------------------------------ ±âº» ÆĞ³ÎÁ¤ÀÇ ----------------------------------
+		// ------------------------------------ ê¸°ë³¸ íŒ¨ë„ì •ì˜ ----------------------------------
 		
 		JPanel panel = new JPanel();
-		panel.setLayout(null);
-	  
-		// -------------------------------  Æ®¸® Å×ÀÌºí ¹× ¼±ÅÃÇÑ Æ®¸®ÀÇ Å×ÀÌºí ÀÌ¸§ ÅäÅ«È­ ¹× Å×ÀÌºí »õ·Î°íÄ§ -------------------------------
+		panel.setLayout(new BorderLayout());
+		
+		// -------------------------------  íŠ¸ë¦¬ í…Œì´ë¸” ë° ì„ íƒí•œ íŠ¸ë¦¬ì˜ í…Œì´ë¸” ì´ë¦„ í† í°í™” ë° í…Œì´ë¸” ìƒˆë¡œê³ ì¹¨ -------------------------------
 	
 		DefaultMutableTreeNode root = new DefaultMutableTreeNode("DB");
 		
 		JTree tree = new JTree(root);
 		
-		// Æ®¸® Å¬¸¯ ¸®½º³Ê
+		// íŠ¸ë¦¬ í´ë¦­ ë¦¬ìŠ¤ë„ˆ
 		tree.addMouseListener(new MouseAdapter() {
 		      public void mouseClicked(MouseEvent me) {
 		        doMouseClicked(me);
@@ -117,11 +119,11 @@ public class test extends JFrame{
 				
 				if (tp != null){
 				
-					// component¿¡ ¼±ÅÃÇÑ Æ®¸® ÀÌ¸§À» ÀúÀåÇÏ°í ½ºÅ°¸¶ ÀÌ¸§ÀÎ CSH. ¸¦ Æ÷ÇÔÇÏ´Â ºÎºĞÀÇ ÀÎµ¦½º¸¦ 1 Ãß°¡ÇÏ¿© index¿¡ ÀúÀå
-					// substringÀ¸·Î ÇØ´ç ÀÎµ¦½ººÎÅÍÀÇ ÀÌ¸§À» result¿¡ ÀúÀå, dbmanager.createTable¿¡ Å×ÀÌºí¸ğµ¨ model, ÅäÅ«È­µÈ ÀÌ¸§ result ¸¦ ³Ö¾î ½ÇÇà.  
+					// componentì— ì„ íƒí•œ íŠ¸ë¦¬ ì´ë¦„ì„ ì €ì¥í•˜ê³  ìŠ¤í‚¤ë§ˆ ì´ë¦„ì¸ CSH. ë¥¼ í¬í•¨í•˜ëŠ” ë¶€ë¶„ì˜ ì¸ë±ìŠ¤ë¥¼ 1 ì¶”ê°€í•˜ì—¬ indexì— ì €ì¥
+					// substringìœ¼ë¡œ í•´ë‹¹ ì¸ë±ìŠ¤ë¶€í„°ì˜ ì´ë¦„ì„ resultì— ì €ì¥, dbmanager.createTableì— í…Œì´ë¸”ëª¨ë¸ model, í† í°í™”ëœ ì´ë¦„ result ë¥¼ ë„£ì–´ ì‹¤í–‰.  
 					
 					String component = tp.getLastPathComponent().toString();
-					if(component.contains("CSH.")){
+					if(true){
 						int index = component.indexOf(".") + 1;
 						result = component.substring(index);
 						dbManager.createTable(model, result);
@@ -132,135 +134,183 @@ public class test extends JFrame{
 		    });
 		
 		JScrollPane scrollPane = new JScrollPane(tree);
-		scrollPane.setBounds(5, 5, 290, 450);
-		panel.add(scrollPane, BorderLayout.CENTER);
+		scrollPane.setSize(100,100);
+		panel.add(scrollPane, BorderLayout.WEST);
 		
 		
+		// ------------------------------- í…Œì´ë¸” êµ¬í˜„ -------------------------------------------
 		
-		// ------------------------------- Å×ÀÌºí ±¸Çö -------------------------------------------
-		
-		JTable table;
-		TextField tfSchema, tfTable, tfName;
 		JTable table2;
 
 		
 		String [][] data = null;
-		String title[]={"½ºÅ°¸¶","Å×ÀÌºí","ÀÌ¸§","À¯Çü"};
-		
-		JPanel pTop = new JPanel();
-		tfSchema = new TextField(5);
-		pTop.add(new JLabel("½ºÅ°¸¶"));
-		pTop.add(tfSchema);
-		
-		tfTable = new TextField(5);
-		pTop.add(new JLabel("Å×ÀÌºí"));
-		pTop.add(tfTable);
-		
-		tfName = new TextField(5);
-		pTop.add(new JLabel("ÀÌ¸§"));
-		pTop.add(tfName);
+		String title[]={"ìŠ¤í‚¤ë§ˆ","í…Œì´ë¸”","ì´ë¦„","ìœ í˜•"};
 		
 		model = new DefaultTableModel(data, title);
-		table2 =new JTable(model);
+		table2 = new JTable(model);
 		jsp = new JScrollPane(table2);
-		jsp.setBounds(300, 5, 580, 450);
+		//jsp.setBounds(340, 35, 580, 450);
+		//jsp.setSize(500,450);
 		jsp.setVisible(false);
 		panel.add(jsp, BorderLayout.CENTER);
 		
 		this.add(panel);
 		this.setVisible(true);
 		
-		// ------------------------------  ¸Ş´º¹Ù ¹× ¸Ş´º¹öÆ° Ãß°¡ºÎºĞ  -------------------------------
+		// ------------------------------  ë©”ë‰´ë°” ë° ë©”ë‰´ë²„íŠ¼ ì¶”ê°€ë¶€ë¶„  -------------------------------
 		 
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 		
-		/*
-		JButton inputSetting = new JButton("ÀÔ·Â ¼³Á¤");
-		menuBar.add(inputSetting);
+		JMenuItem convert = new JMenuItem(" ìŠ¤í‚¤ë§ˆ ìƒì„± ");
+		JMenuItem delete = new JMenuItem(" ìŠ¤í‚¤ë§ˆ ì‚­ì œ ");
+		JMenuItem option = new JMenuItem(" BASE ëª¨ë¸ ì„¤ì • ");
+		JMenuItem search = new JMenuItem(" ë°ì´í„° ê²€ìƒ‰ ");
 		
-		inputSetting.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				fomSetting.setVisible(true);
-			}
-		});
+		JMenu tableM = new JMenu(" ìŠ¤í‚¤ë§ˆ ê´€ë¦¬ ");
+		menuBar.add(tableM);
+		tableM.add(convert);
+		tableM.add(delete);
+		tableM.add(option);
 		
-		JButton outputSetting = new JButton("Ãâ·Â ¼³Á¤");
-		menuBar.add(outputSetting);
+		JMenu searchM = new JMenu(" ë°ì´í„° ê²€ìƒ‰ ");
+		searchM.add(search);
+		menuBar.add(searchM);
 		
-		outputSetting.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				DBMSSettingFrame.setVisible(true);
-			}
-		});
-		*/
+		JMenu syncM = new JMenu(" ë™ê¸°í™” í™•ì¸ ");
+		menuBar.add(syncM);
 		
-		JButton convert = new JButton(" ½ºÅ°¸¶ »ı¼º ");
-		menuBar.add(convert);
+		JMenu helpM = new JMenu(" ë„ì›€ë§ ");
+		menuBar.add(helpM);
 		
-		JButton sync = new JButton(" µ¿±âÈ­ È®ÀÎ ");
-		menuBar.add(sync);
+
+		// -------------------------------  ë°ì´í„° ì§ˆì˜ ìœ„í•œ í…ìŠ¤íŠ¸ í•„ë“œ ì •ì˜ -----------------------------------------------------
 		
-		JButton pfm = new JButton(" ¼º´É ÃøÁ¤");
-		menuBar.add(pfm);
+		JPanel queryPanel = new JPanel(new BorderLayout());
+		queryField = new JTextField();
 		
-		JButton help = new JButton(" µµ¿ò¸» ");
-		menuBar.add(help);
+		JLabel queryLabel = new JLabel(" ë°ì´í„° ì§ˆì˜ : ");
+		
+		queryPanel.add(queryField);
+		queryPanel.add(queryLabel, BorderLayout.WEST);
+		panel.add(queryPanel, BorderLayout.NORTH);
+		
+		queryPanel.setVisible(true);
 	
-		
-		// ------------------------ ½ºÅ°¸¶ »ı¼º ¹öÆ° convert¿¡ ÆÄÀÏ ¼±ÅÃ ¹× ½ºÅ°¸¶ »ı¼º ÀÌº¥Æ® Ãß°¡  ---------------------------------------
+		// ------------------------ í…Œì´ë¸” ìƒì„± ë²„íŠ¼ convertì— íŒŒì¼ ì„ íƒ ë° ìŠ¤í‚¤ë§ˆ ìƒì„± ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------
 		
 
 		filePath = new JTextField();
 		filePath.setEnabled(false);
+		dbManager.createTree(root); // ìŠ¤í‚¤ë§ˆê°€ ì´ë¯¸ ìƒì„±ë˜ì—ˆì„ë•Œ í…Œì´ë¸” ì¡°íšŒë¥¼ ê°€ëŠ¥í•˜ë„ë¡ í•œë‹¤. 
+		
 		
 		convert.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 				Frame file = new Frame();
-				JFileChooser fileChooser = new JFileChooser("D:\\Dropbox\\Á¹¾÷ÇÁ·ÎÁ§Æ®ÀÇ ÆÀ Æú´õ\\testXMLPar\\testXMLPar\\FOM");
+				JFileChooser fileChooser = new JFileChooser("E:\\Dropbox\\ì¡¸ì—…í”„ë¡œì íŠ¸ì˜ íŒ€ í´ë”\\testXMLPar\\testXMLPar\\FOM");
+				setFileChooserFont(fileChooser.getComponents());
+				
 				int result = fileChooser.showOpenDialog(file);
 				if( result == JFileChooser.APPROVE_OPTION ){
 					File selectedFile = fileChooser.getSelectedFile();
 					if( selectedFile.toString().contains(".xml")) {
 						System.out.println("XML FILE SELECTED : " + selectedFile.toString());
-						filePath.setText(selectedFile.toString()); 
-						JOptionPane.showMessageDialog(file, "½ºÅ°¸¶ »ı¼ºÀÌ ¿Ï·áµÇ¾ú½À´Ï´Ù.");
+						filePath.setText(selectedFile.toString());
 					} else {
-						JOptionPane.showMessageDialog(file, "xmlÆÄÀÏÀ» ¼±ÅÃÇÏ¿© ÁÖ½Ê½Ã¿À.");
+						JOptionPane.showMessageDialog(file, "xmlíŒŒì¼ì„ ì„ íƒí•˜ì—¬ ì£¼ì‹­ì‹œì˜¤.");
 					}
 
 					filePaths = filePath.getText();
 					if ((filePaths.toString().contains(".xml"))) createSchema(filePaths);
 					
-					dbManager.createTree(root);   // Æ®¸® »ı¼º
+					dbManager.createTree(root);   // íŠ¸ë¦¬ ìƒì„±
+					tree.repaint();
+					for (int i = 0; i < tree.getRowCount(); i++) {
+						tree.expandRow(i);
+					}
 				}
 			}
 		});
+		  
 		
+		// ------------------------- í…Œì´ë¸” ì‚­ì œ ë²„íŠ¼ ë° ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------------
+		delete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				dbManager.deleteTree(root);
+				Frame file = new Frame();
+				tree.repaint();
+				System.out.println("\nSCHEMA DELETED");
+				JOptionPane.showMessageDialog(file, "ìŠ¤í‚¤ë§ˆê°€ ì‚­ì œë˜ì—ˆìŠµë‹ˆë‹¤.");
+				}
+		});
+		
+		// ------------------------ í…Œì´ë¸” ê²€ìƒ‰ ë²„íŠ¼ ë° ì´ë²¤íŠ¸ ì¶”ê°€  ---------------------------------------------
+		search.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				dbQuery.setVisible(true);
+			}
+		});
+		
+
+		// ------------------------------  UI ê¸€ì”¨ì²´ ì„¤ì •  ------------------------------------------------
+		
+		f1 = new Font("ë§‘ì€ ê³ ë”•", Font.PLAIN, 13);
+		f2 = new Font("ë§‘ì€ ê³ ë”•", Font.BOLD, 15);
+		
+		
+		convert.setFont(f1);
+		delete.setFont(f1);
+		search.setFont(f1);
+		option.setFont(f1);
+		
+		tableM.setFont(f1);
+		syncM.setFont(f1);
+		searchM.setFont(f1);
+		helpM.setFont(f1);
+		table2.setFont(f1);
+		queryLabel.setFont(f1);
+	
+		UIManager.put("OptionPane.messageFont", f1);
+		UIManager.put("OptionPane.buttonFont", f1);
+		
+		dbQuery.setFont(f1);
 	}
 	
-	// -------------------------------- ½ºÅ°¸¶ »ı¼º ÇÔ¼ö --------------------------------------
-	 
+	public void setFileChooserFont(Component[] comp)
+	  {
+	    for(int x = 0; x < comp.length; x++)
+	    {
+	      if(comp[x] instanceof Container) setFileChooserFont(((Container)comp[x]).getComponents());
+	      try{comp[x].setFont(f1);} // ê¸€ì”¨ì²´ ì„¤ì •
+	      catch(Exception e){}//do nothing
+	    }
+	  }
+	
+	
+	// -------------------------------- ìŠ¤í‚¤ë§ˆ ìƒì„± í•¨ìˆ˜ --------------------------------------
 	public void createSchema(String path) {
+		Frame file = new Frame();
 		try {
 			ParsingXML txml = new ParsingXML();
 			if (filePaths != null ) {
 				txml.setData(filePaths);
 				XmlToDBSchema xtdb = new XmlToDBSchema();
-
 				txml.csCreate("TestFOM2DBMap", "", "");
 				System.out.println("TXT FILE CREATED\n");
-				
-
 				System.out.println("CREATING SCHEMA ..");
 				
-				xtdb.createDBSchma();
-				System.out.println("\nSCHEMA CREATED");
-				
-				// ÇöÀç DB¿¡ ÀÌ¹Ì ½ºÅ°¸¶°¡ ÀÖÀ»½Ã¿£ »ı¼ºµÇÁö ¾Ê´Â ¿À·ù ÀÖÀ½. ¿À·ù¾øÀÌ »ı¼º À§ÇØ¼­´Â DB¿¡¼­ ÇØ´ç ½ºÅ°¸¶¸¦ Á¦°ÅÇØ ÁÖ¾î¾ß ÇÔ.
-				
+				if(dbManager.checkTable(model) == 0) {
+					xtdb.createDBSchma();
+					System.out.println("\nSCHEMA CREATED");
+					JOptionPane.showMessageDialog(file, "ìŠ¤í‚¤ë§ˆ ìƒì„±ì´ ì™„ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.");
+		
+				} else {
+					System.out.println("\nSCHEMA ALREADY EXIST");
+					JOptionPane.showMessageDialog(file, "ìƒì„±í•  ìŠ¤í‚¤ë§ˆê°€ DBì— ì´ë¯¸ ì¡´ì¬í•©ë‹ˆë‹¤.");
+				}
 				
 			} else {
 				System.out.println("NO FILE IN test.filePaths");
@@ -268,5 +318,14 @@ public class test extends JFrame{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+	}
+	
+	public static DefaultTableModel getTable(){
+		return model;
+	}
+	
+	public static JScrollPane getJsp(){
+		return jsp;
 	}
 }
